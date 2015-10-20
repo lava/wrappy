@@ -73,4 +73,3 @@ PythonObject call(PythonObject from, const std::string& f, Args... args)
 
 } // end namespace wrappy
 
-#endif

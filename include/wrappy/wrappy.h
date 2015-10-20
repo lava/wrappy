@@ -19,7 +19,6 @@ typedef _object PyObject;
  * object (directly or indirectly) by mutexes.
  */
 
-namespace maps {
 namespace wrappy {
 
 class WrappyError : public std::runtime_error {
