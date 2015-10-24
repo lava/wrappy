@@ -1,20 +1,28 @@
-cmake_minimum_required (VERSION 3.1)
+cmake_minimum_required (VERSION 2.8)
 project (wrappy)
 
-add_library(wrappy SHARED wrappy.cpp)
+find_package(PythonLibs 2.7 REQUIRED)
+# If i had one word to describe python versioning, it would be "broken as fuck"
+if (NOT PYTHON_VERSION VERSION_LESS 3.0)
+  error("Requires python 2.x")
+endif()
 
-find_package(PythonLibs REQUIRED)
+find_package(Boost COMPONENTS unit_test_framework)
+
+add_library(wrappy SHARED wrappy.cpp)
 
 target_include_directories(wrappy PRIVATE ${PYTHON_INCLUDE_DIRS})
 target_include_directories(wrappy PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include/)
 
-target_compile_features(wrappy PUBLIC cxx_variadic_templates)
-target_compile_features(wrappy PUBLIC cxx_rvalue_references)
-target_compile_features(wrappy PUBLIC cxx_auto_type)
+if(${CMAKE_VERSION} VERSION_LESS 3.1)
+  set(CMAKE_CXX_FLAGS "-std=c++0x")
+else()
+  target_compile_features(wrappy PUBLIC cxx_variadic_templates)
+  target_compile_features(wrappy PUBLIC cxx_rvalue_references)
+  target_compile_features(wrappy PUBLIC cxx_auto_type)
+endif()
 
 target_link_libraries(wrappy ${PYTHON_LIBRARIES})
-
-find_package(Boost COMPONENTS unit_test_framework)
 
 if(Boost_UNIT_TEST_FRAMEWORK_FOUND)
   enable_testing()
