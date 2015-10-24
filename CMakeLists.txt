@@ -1,14 +1,17 @@
 cmake_minimum_required (VERSION 2.8)
 project (wrappy)
 
+# Dependencies
 find_package(PythonLibs 2.7 REQUIRED)
-# If i had one word to describe python versioning, it would be "broken as fuck"
+# If i had one word to describe python versioning,
+# it would be "broken as fuck"
 if (NOT PYTHON_VERSION VERSION_LESS 3.0)
   error("Requires python 2.x")
 endif()
 
 find_package(Boost COMPONENTS unit_test_framework)
 
+# wrappy library target
 add_library(wrappy SHARED wrappy.cpp)
 
 target_include_directories(wrappy PRIVATE ${PYTHON_INCLUDE_DIRS})
@@ -24,6 +27,15 @@ endif()
 
 target_link_libraries(wrappy ${PYTHON_LIBRARIES})
 
+# Examples
+add_executable(example_email examples/email.cpp)
+add_executable(example_turtle examples/turtle.cpp)
+add_executable(example_plot examples/plot.cpp)
+target_link_libraries(example_email wrappy)
+target_link_libraries(example_turtle wrappy)
+target_link_libraries(example_plot wrappy)
+
+# Tests
 if(Boost_UNIT_TEST_FRAMEWORK_FOUND)
   enable_testing()
   add_executable(test_stdlib tests/stdlib.cpp)
