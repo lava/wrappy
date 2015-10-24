@@ -49,7 +49,10 @@ public:
     PythonObject(owning, PyObject*);
     PythonObject(borrowed, PyObject*);
 
+    // Syntactic sugar
     operator bool() const;
+    template<typename... Args>
+    PythonObject call(const std::string& f, Args... args);
 
     // Rule-of-five plumbing
     ~PythonObject();

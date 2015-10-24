@@ -71,5 +71,11 @@ PythonObject call(PythonObject from, const std::string& f, Args... args)
     return callWithArgs(from, f, pargs, kwargs);
 }
 
+template<typename... Args>
+PythonObject PythonObject::call(const std::string& f, Args... args)
+{
+    return wrappy::call(*this, f, args...);
+}
+
 } // end namespace wrappy
 

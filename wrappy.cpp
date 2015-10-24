@@ -29,6 +29,9 @@ void wrappyInitialize()
     // All entries from $PYTHONPATH are pre-pended to the module search path
 
     Py_Initialize();
+    // Setting a dummy value since many libraries require sys.argv[0] to exist
+    char* dummy_args[] = {const_cast<char*>("wrappy"), nullptr};
+    PySys_SetArgvEx(1, dummy_args, 0);
 }
 
 
