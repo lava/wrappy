@@ -1,2 +1,74 @@
-# wrappy
-Wrapping python made easy
+# I wanna send an email!
+
+    #include <wrappy/wrappy.h>
+
+    int main() {
+         auto s = wrappy::call("smtplib.SMTP", "localhost");
+         s.call("sendmail", "python@localhost", "wrappy@example.org",
+             "Subject: Norwegian blue parrot for sale\n"
+             "Amazing offer, only while supplies last!\n"
+             "Product may show signs of usage.");
+    }
+
+Requires an SMTP daemon to be running on localhost, e.g. 
+`sudo aptitude install sendmail`. Note that most webmail providers will
+classify the mail as spam and put it in the thrash or reject it outright.
+
+# I wanna be a turtle!
+
+    #include <wrappy/wrappy.h>
+
+    void drawTree(double len, double angle, int lvl) {
+        if(!lvl) return;
+
+        wrappy::call("turtle.left", angle);
+        wrappy::call("turtle.forward", len);
+        drawTree(0.5*len,  60, lvl-1);
+        drawTree(0.7*len,  0,  lvl-1);
+        drawTree(0.5*len, -60, lvl-1);
+        wrappy::call("turtle.backward", len);
+        wrappy::call("turtle.right", angle);
+    }
+
+    int main() {
+        drawTree(100, 90, 6);
+    }
+
+
+# I wanna be a scientist!
+
+    #include <wrappy/wrappy.h>
+    #include <algorithm>
+
+    int main() {
+        std::vector<double> x {1.0, 2.0, 3.0, 4.0}, y {1.5, 1.0, 1.3, 2.0};
+        std::vector<wrappy::PythonObject> pyx, pyy;
+
+        std::transform(x.begin(), x.end(), std::back_inserter(pyx),
+            [](double d) { return wrappy::construct(d); });
+        std::transform(y.begin(), y.end(), std::back_inserter(pyy),
+            [](double d) { return wrappy::construct(d); });
+
+        wrappy::call("matplotlib.pyplot.plot", pyx, pyy);
+        wrappy::call("matplotlib.pyplot.show");
+    }
+
+Requires the matplotlib package to be installed.
+This example was the original motivation for this library, but if you actually
+*just* want to plot something from C++, this library will be better suited to
+your needs: [matplotlib-cpp](http://github.com/lava/matplotlib-cpp)
+
+# I wanna be educated!
+So the point of this library is to make it easy to call out to python code from
+C++. 
+
+Why would you want to do this? If there is a python-only library that
+offers some needed functionality and no equivalent pyton library exists. In
+that case, it is often more practical and far easier to do it this way than
+to wrap your C++ code in python. As the examples above show, just a few lines
+of code can be enough.
+
+Right now, this library only works with the 2.x versions of python, since the C API changed with version 3. It's quite similar though, so the effort to port
+it to Python 3 shouldn't be too big. However, it seems that most people (me
+included) are using 2.7 and have no plans on switching anytime soon, so I
+haven't bothered with it.
