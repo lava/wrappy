@@ -1,0 +1,24 @@
+Source: libwrappy
+Priority: optional
+Maintainer: Benno Evers <benno@bmevers.de>
+Build-Depends: debhelper (>= 9), cmake, libpython2.7-dev, libboost-test-dev
+Standards-Version: 3.9.6
+Section: libs
+Homepage: http://github.com/lava/wrappy
+Vcs-Git: git://github.com/lava/wrappy.git
+
+Package: libwrappy-dev
+Section: libdevel
+Architecture: any
+Depends: libwrappy1 (= ${binary:Version}), ${misc:Depends}
+Description: Calling python code from C++
+ This library enables easily calling out to python libraries
+ from C++ code.
+
+Package: libwrappy1
+Section: devel
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Calling python code from C++ (development files)
+ This library enables easily calling out to python libraries
+ from C++ code. (development files)
