@@ -58,6 +58,28 @@ This example was the original motivation for this library, but if you actually
 *just* want to plot something from C++, this library will be better suited to
 your needs: [matplotlib-cpp](http://github.com/lava/matplotlib-cpp)
 
+# I wanna use this library!
+
+#### ...and I don't need no fancy extras
+
+    cmake .
+    make
+    sudo make install
+
+#### ...and I like to do things properly
+
+    git checkout ubuntu/wily
+    gbp buildpackage --git-debian-branch=ubuntu/wily --git-upstream-version='v%(version)s'
+    sudo dpkg -i ../libwrappy*.deb
+
+Requires `git-buildpackage` and Ubuntu 15.10, although this should work on almost any other Debian-like distribution as well.
+
+#### ...and I'd rather prefer a good, old release tarball
+
+    pristine-tar checkout v1.0.0
+
+Requires the `pristine-tar` package.
+
 # I wanna be educated!
 So the point of this library is to make it easy to call out to python code from
 C++. 

@@ -13,6 +13,8 @@ find_package(Boost COMPONENTS unit_test_framework)
 
 # wrappy library target
 add_library(wrappy SHARED wrappy.cpp)
+set_target_properties(wrappy PROPERTIES VERSION 1.0.0)
+set_target_properties(wrappy PROPERTIES SOVERSION 1)
 
 target_include_directories(wrappy PRIVATE ${PYTHON_INCLUDE_DIRS})
 target_include_directories(wrappy PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include/)
@@ -47,3 +49,9 @@ if(Boost_UNIT_TEST_FRAMEWORK_FOUND)
 else()
   message("Boost Unit testing libraries not found, not compiling tests")
 endif()
+
+# Installation
+install(TARGETS wrappy DESTINATION lib/)
+install(DIRECTORY include/ DESTINATION include/)
+install(DIRECTORY examples/ DESTINATION share/doc/libwrappy/examples/)
+install(FILES README.md DESTINATION share/doc/libwrappy/)
