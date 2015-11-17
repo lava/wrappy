@@ -74,12 +74,6 @@ your needs: [matplotlib-cpp](http://github.com/lava/matplotlib-cpp)
 
 Requires `git-buildpackage` and Ubuntu 15.10, although this should work on almost any other Debian-like distribution as well.
 
-#### ...and I'd rather prefer a good, old release tarball
-
-    pristine-tar checkout v1.0.0
-
-Requires the `pristine-tar` package.
-
 # I wanna be educated!
 So the point of this library is to make it easy to call out to python code from
 C++. 
