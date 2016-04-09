@@ -55,8 +55,7 @@ classify the mail as spam and put it in the thrash or reject it outright.
 
 Requires the matplotlib package to be installed.
 This example was the original motivation for this library, but if you actually
-*just* want to plot something from C++, this library will be better suited to
-your needs: [matplotlib-cpp](http://github.com/lava/matplotlib-cpp)
+*just* want to plot something from C++, there is a header-only alternative: [matplotlib-cpp](http://github.com/lava/matplotlib-cpp)
 
 # I wanna use this library!
 
