@@ -74,8 +74,7 @@ This example was the original motivation for this library, but if you actually
 Requires `git-buildpackage` and Ubuntu 15.10, although this should work on almost any other Debian-like distribution as well.
 
 # I wanna be educated!
-So the point of this library is to make it easy to call out to python code from
-C++. 
+The idea of this library is to make it easy to call out to python code from C++. 
 
 Why would you want to do this? If there is a python-only library that
 offers some needed functionality and no equivalent pyton library exists. In
@@ -83,7 +82,10 @@ that case, it is often more practical and far easier to do it this way than
 to wrap your C++ code in python. As the examples above show, just a few lines
 of code can be enough.
 
-Right now, this library only works with the 2.x versions of python, since the C API changed with version 3. It's quite similar though, so the effort to port
-it to Python 3 shouldn't be too big. However, it seems that most people (me
-included) are using 2.7 and have no plans on switching anytime soon, so I
-haven't bothered with it.
+The heart of this library is the `PythonObject` class, which is a RAII-wrapper around python's `PyObject*` that handles 
+the reference counting. Together with the `call()`- and `construct()`-families of functions seen in the 
+examples above, these form a compact API that enables a very "natural" style of calling out to python code.
+
+Right now, this library only works with the 2.x versions of python, since the C API changed with version 3. It's 
+quite similar, so the effort to port it to Python 3 shouldn't be too big. However, given that most people seem to be
+happy with 2.7, the chances that someone will bother to do it seem to be low.
