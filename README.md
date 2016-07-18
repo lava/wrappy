@@ -67,8 +67,8 @@ This example was the original motivation for this library, but if you actually
 
 #### ...and I like to do things properly
 
-    git checkout ubuntu/wily
-    gbp buildpackage --git-debian-branch=ubuntu/wily --git-upstream-version='v%(version)s'
+    git checkout ubuntu/xenial
+    gbp buildpackage --git-debian-branch=ubuntu/wily --git-upstream-tag='v%(version)s'
     sudo dpkg -i ../libwrappy*.deb
 
 Requires `git-buildpackage` and Ubuntu 15.10, although this should work on almost any other Debian-like distribution as well.
