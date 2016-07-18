@@ -68,10 +68,12 @@ This example was the original motivation for this library, but if you actually
 #### ...and I like to do things properly
 
     git checkout ubuntu/xenial
-    gbp buildpackage --git-debian-branch=ubuntu/wily --git-upstream-tag='v%(version)s'
+    vim debian/changelog (insert your own name/email)
+    git commit -am "Changes for local 1.0.0 release"
+    gbp buildpackage --git-debian-branch=ubuntu/xenial --git-upstream-tag='v%(version)s'
     sudo dpkg -i ../libwrappy*.deb
 
-Requires `git-buildpackage` and Ubuntu 15.10, although this should work on almost any other Debian-like distribution as well.
+Requires `git-buildpackage` and Ubuntu 16.04, although this should work on almost any other Debian-like distribution as well. (`--git-upstream-tag` may have been called `--git-upstream-version` in previous versions)
 
 # I wanna be educated!
 The idea of this library is to make it easy to call out to python code from C++. 
