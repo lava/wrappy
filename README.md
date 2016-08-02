@@ -68,7 +68,7 @@ This example was the original motivation for this library, but if you actually
 #### ...and I like to do things properly
 
     git checkout ubuntu/xenial
-    vim debian/changelog (insert your own name/email)
+    dch -i  # Skip this step and the next if you don't have a valid gpg key anyways
     git commit -am "Changes for local 1.0.0 release"
     gbp buildpackage --git-debian-branch=ubuntu/xenial --git-upstream-tag='v%(version)s'
     sudo dpkg -i ../libwrappy*.deb
