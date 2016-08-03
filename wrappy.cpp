@@ -19,6 +19,9 @@ namespace {
 
 using namespace wrappy;
 
+PyObject *s_EmptyTuple;
+PyObject *s_EmptyDict;
+
 __attribute__((constructor))
 void wrappyInitialize()
 {
@@ -35,6 +38,7 @@ void wrappyInitialize()
     // All entries from $PYTHONPATH are pre-pended to the module search path
 
     Py_Initialize();
+
     // Setting a dummy value since many libraries require sys.argv[0] to exist
     char* dummy_args[] = {const_cast<char*>("wrappy"), nullptr};
     PySys_SetArgvEx(1, dummy_args, 0);
@@ -42,6 +46,9 @@ void wrappyInitialize()
     wrappy::None  = PythonObject(PythonObject::borrowed{}, Py_None);
     wrappy::True  = PythonObject(PythonObject::borrowed{}, Py_True);
     wrappy::False = PythonObject(PythonObject::borrowed{}, Py_False);
+
+    s_EmptyTuple = Py_BuildValue("()");
+    s_EmptyDict  = Py_BuildValue("{}");
 }
 
 
@@ -227,6 +234,7 @@ void addModuleSearchPath(const std::string& path)
     }
 }
 
+// Doesn't perform checks on the return value (input is still checked)
 PythonObject callFunctionWithArgs(
     PythonObject function,
     const std::vector<PythonObject>& args,
@@ -241,7 +249,7 @@ PythonObject callFunctionWithArgs(
     PythonObject tuple(PythonObject::owning {}, PyTuple_New(sz));
     if (!tuple) {
         PyErr_Print();
-        throw WrappyError("Wrappy: Couldn't create python typle.");
+        throw WrappyError("Wrappy: Couldn't create python tuple.");
     }
 
     for (size_t i = 0; i < sz; ++i) {
@@ -264,8 +272,13 @@ PythonObject callFunctionWithArgs(
     PythonObject res(PythonObject::owning{},
         PyObject_Call(function.get(), tuple.get(), dict.get()));
 
-    if (!res) {
+    if (PyErr_Occurred()) {
         PyErr_Print();
+        PyErr_Clear(); // TODO add string to exception, make custom exception class
+        throw WrappyError("Wrappy: Exception during call to python function");
+    }
+
+    if (!res) {
         throw WrappyError("Wrappy: Error calling function");
     }
 
@@ -333,6 +346,55 @@ PythonObject callWithArgs(
     }
 
     return callFunctionWithArgs(function, args, kwargs);
+}
+
+PythonIterator::PythonIterator(bool stopped, PythonObject iter):
+  stopped_(stopped),
+  iter_(iter)
+{}
+
+PythonIterator begin(PythonObject obj)
+{
+    PythonObject pyIter(PythonObject::owning{}, PyObject_GetIter(obj.get()));
+    PythonIterator iter(false, pyIter);
+    // Move iterator to first position in list to
+    // initialize obj_
+    return ++iter;
+}
+
+PythonIterator end(PythonObject)
+{
+    return PythonIterator(true, PythonObject());
+}
+
+PythonIterator& PythonIterator::operator++()
+{
+    auto next = iter_.attr("next"); // Change this to __next__ if switching to python 3
+
+    // Can't use the normal "call" because we want to actually
+    // handle the exception
+    obj_ = PythonObject(PythonObject::owning{},
+        PyObject_Call(next.get(), s_EmptyTuple, s_EmptyDict));
+
+    if (PyErr_Occurred() && PyErr_ExceptionMatches(PyExc_StopIteration) ) {
+        stopped_ = true;
+        PyErr_Clear();
+    } else if (PyErr_Occurred() || !obj_) {
+        PyErr_Print();
+        PyErr_Clear();
+        throw WrappyError("Unexcected exception during iteration");
+    }
+
+    return *this;
+}
+
+PythonObject PythonIterator::operator*()
+{
+    return obj_;
+}
+
+bool PythonIterator::operator!=(const PythonIterator& other) {
+    return stopped_ != other.stopped_;
 }
 
 } // end namespace wrappy
