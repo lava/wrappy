@@ -77,7 +77,7 @@ PythonObject loadModule(const std::string& name, size_t& dot)
 }
 
 // name must start with a dot
-PythonObject loadFunction(PythonObject module, const std::string& name)
+PythonObject loadObject(PythonObject module, const std::string& name)
 {
     // Evaluate the chain of dot-operators that leads from the module to
     // the function.
@@ -272,23 +272,21 @@ PythonObject callFunctionWithArgs(
     return res;
 }
 
-PythonObject callWithArgs(
-    const std::string& name,
-    const std::vector<PythonObject>& args,
-    const std::vector<std::pair<std::string, PythonObject>>& kwargs)
+PythonObject load(
+    const std::string& name)
 {
     size_t cutoff;
     PythonObject module = loadModule(name, cutoff);
-    PythonObject function;
+    PythonObject object;
 
     if (module) {
-        function = loadFunction(module, name.substr(cutoff));
+        object = loadObject(module, name.substr(cutoff));
     } else {
         // No proper prefix was a valid module, but maybe it's a built-in
-        function = loadBuiltin(name);
+        object = loadBuiltin(name);
     }
 
-    if (!function) {
+    if (!object) {
         std::string error_message;
         if(cutoff != std::string::npos) {
             error_message = "Wrappy: Lookup of function " +
@@ -301,6 +299,15 @@ PythonObject callWithArgs(
         throw WrappyError(error_message);
     }
 
+    return object;
+}
+
+PythonObject callWithArgs(
+    const std::string& name,
+    const std::vector<PythonObject>& args,
+    const std::vector<std::pair<std::string, PythonObject>>& kwargs)
+{
+    PythonObject function = load(name);
     return callFunctionWithArgs(function, args, kwargs);
 }
 
@@ -318,7 +325,7 @@ PythonObject callWithArgs(
         name = "." + functionName;
     }
 
-    PythonObject function = loadFunction(from, name);
+    PythonObject function = loadObject(from, name);
 
     if (!function) {
         throw WrappyError("Wrappy: " 
