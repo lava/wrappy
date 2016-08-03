@@ -9,6 +9,12 @@
 #include <mutex>
 #include <cstdio>
 
+namespace wrappy {
+
+PythonObject None, True, False;
+
+} // end namespace wrappy
+
 namespace {
 
 using namespace wrappy;
@@ -32,6 +38,10 @@ void wrappyInitialize()
     // Setting a dummy value since many libraries require sys.argv[0] to exist
     char* dummy_args[] = {const_cast<char*>("wrappy"), nullptr};
     PySys_SetArgvEx(1, dummy_args, 0);
+
+    wrappy::None  = PythonObject(PythonObject::borrowed{}, Py_None);
+    wrappy::True  = PythonObject(PythonObject::borrowed{}, Py_True);
+    wrappy::False = PythonObject(PythonObject::borrowed{}, Py_False);
 }
 
 

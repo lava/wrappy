@@ -51,6 +51,7 @@ public:
 
     // Syntactic sugar
     operator bool() const;
+    PythonObject operator()() const; // forwards to self.__call__()
     template<typename... Args>
     PythonObject call(const std::string& f, Args... args);
 
@@ -64,6 +65,14 @@ public:
 private:
     PyObject* obj_;
 };
+
+
+
+// Providing access to pythons global objects
+extern PythonObject None;
+extern PythonObject True;
+extern PythonObject False;
+
 
 void addModuleSearchPath(const std::string& path);
 
@@ -111,6 +120,16 @@ PythonObject callWithArgs(
     const std::vector<std::pair<std::string, PythonObject>>& kwargs
         = std::vector<std::pair<std::string, PythonObject>>());
 
+
+// Just get an object, without calling a function
+PythonObject load(const std::string& name);
+
+
+// Will call x.__enter__() in constructor and x.__exit__() in destructor
+class ContextManager {
+	ContextManager(PythonObject x);
+	~ContextManager();
+};
 
 } // end namespace wrappy
 
