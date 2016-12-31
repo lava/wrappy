@@ -67,17 +67,17 @@ PythonObject loadBuiltin(const std::string& name)
     return function;
 }
 
-// Load the longest prefix of name that is a valid module name
-// Returns null object if 
+// Load the longest prefix of name that is a valid module name.
+// Returns null object if none is.
 PythonObject loadModule(const std::string& name, size_t& dot)
 {
     dot = name.size();
     PythonObject module;
     while (!module && dot != std::string::npos) {
         dot = name.rfind('.', dot-1);
-        auto prefix = name.substr(0, dot).c_str();
+        std::string prefix = name.substr(0, dot);
         module = PythonObject(PythonObject::owning {},
-            PyImport_ImportModule(prefix));
+            PyImport_ImportModule(prefix.c_str()));
     }
 
     return module;
