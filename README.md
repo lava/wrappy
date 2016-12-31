@@ -63,7 +63,7 @@ This example was the original motivation for this library, but if you actually
 
     cmake .
     make
-    sudo make install
+    sudo make install  # or: sudo checkinstall
 
 #### ...and I like to do things properly
 
@@ -79,7 +79,7 @@ Requires `git-buildpackage` and Ubuntu 16.04, although this should work on almos
 The idea of this library is to make it easy to call out to python code from C++. 
 
 Why would you want to do this? If there is a python-only library that
-offers some needed functionality and no equivalent pyton library exists. In
+offers some needed functionality and no equivalent python library exists. In
 that case, it is often more practical and far easier to do it this way than
 to wrap your C++ code in python. As the examples above show, just a few lines
 of code can be enough.
@@ -91,3 +91,59 @@ examples above, these form a compact API that enables a very "natural" style of 
 Right now, this library only works with the 2.x versions of python, since the C API changed with version 3. It's 
 quite similar, so the effort to port it to Python 3 shouldn't be too big. However, given that most people seem to be
 happy with 2.7, the chances that someone will bother to do it seem to be low.
+
+## Debugging
+
+You can use the python pretty printing facilities for debugging:
+
+    (gdb) p _PyObject_Dump(iter_.get())
+    object  : <listiterator object at 0x7ffff7e97390>
+    type    : listiterator
+    refcount: 1
+    address : 0x7ffff7e97390
+
+
+# API reference
+
+(work in progress)
+
+## Free functions
+
+* `wrappy::load(const std::string& name)`
+Load the python object identified by the given name. It should be either
+builtin function (`isinstance`, `eval`, ...), or the fully qualified name of a callable
+in some python module (`os.getpid`, `f`)
+
+Names are resolved in the following way: The given name is split at dots, and the longest
+prefix that is a valid import name is used as the module name. Afterwards, all components
+are resolved as attributes of the previous object.
+
+* `wrappy::call(name, Args...)`
+Call the function with the given args.
+
+* `wrappy::call(PythonObject from, const std::string& name, Args...)
+
+* `PythonObject wrappy::construct(const std::string&)`
+* `PythonObject wrappy::construct(int)`
+* `PythonObject wrappy::construct(long long)`
+* `PythonObject wrappy::construct(float)`
+* `PythonObject wrappy::construct(double)`
+* `PythonObject wrappy::construct(bool)`
+* `PythonObject wrappy::construct(PythonObject)`
+Construct a python primitive (PyString, PyNumber, ...) from the corresponding C++ type.
+The overload that takes a PythonObject as argument is the identity function.
+
+## struct PythonObject
+* PythonObject PythonObject::attr(const std::string& name)
+Returns the result of executing x.attr in python.
+
+* long long PythonObject::num()
+* double PythonObject::floating()
+* std::string PythonObject::str()
+Convert the python object to the corresponding C++ type.
+
+* `PyObject* PythonObject::get()`
+Return the underlying `PyObject*`. Remember to `Py_INCREF()` if you intend to use it
+independently of the PythonObject it came from.
+
+

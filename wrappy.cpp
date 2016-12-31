@@ -129,6 +129,13 @@ PythonObject::PythonObject(const PythonObject& other)
     Py_XINCREF(obj_);
 }
 
+PyObject* PythonObject::release()
+{
+    auto res = obj_;
+    obj_ = nullptr;
+    return res;
+}
+
 PythonObject& PythonObject::operator=(const PythonObject& other)
 {
     PythonObject tmp(other);
@@ -179,6 +186,12 @@ PythonObject::operator bool() const
 {
     return obj_ != nullptr;
 }
+
+PythonObject PythonObject::operator()() const
+{
+    return PythonObject(owning{}, PyObject_Call(obj_, s_EmptyTuple, s_EmptyDict));
+}
+
 
 PythonObject construct(long long ll)
 {
@@ -348,6 +361,10 @@ PythonObject callWithArgs(
     return callFunctionWithArgs(function, args, kwargs);
 }
 
+//
+// PythonIterator implementation
+//
+
 PythonIterator::PythonIterator(bool stopped, PythonObject iter):
   stopped_(stopped),
   iter_(iter)
@@ -396,5 +413,97 @@ PythonObject PythonIterator::operator*()
 bool PythonIterator::operator!=(const PythonIterator& other) {
     return stopped_ != other.stopped_;
 }
+
+
+//
+// wrapFunction implementation
+//
+
+namespace {
+
+std::vector<PythonObject> to_vector(PyObject* pyargs)
+{
+    if (!PyTuple_Check(pyargs)) {
+        throw WrappyError("Trampoling args was no tuple");
+    }
+    auto nargs = PyTuple_Size(pyargs);
+    std::vector<PythonObject> args;
+    args.reserve(nargs);
+    for (ssize_t i=0; i<nargs; ++i) {
+        args.emplace_back(PythonObject::borrowed{}, PyTuple_GetItem(pyargs, i));
+    }
+    return args;
+}
+
+std::map<const char*, PythonObject> to_map(PyObject* pykwargs)
+{
+    if (!PyDict_Check(pykwargs)) {
+        throw WrappyError("Trampoling kwargs was no dict");
+    }
+    std::map<const char*, PythonObject> kwargs;
+    PyObject *key, *value;
+    Py_ssize_t pos = 0;
+    while (PyDict_Next(pykwargs, &pos, &key, &value)) {
+        const char* str = PyString_AsString(key);
+        PythonObject obj(PythonObject::borrowed{}, value);
+        kwargs.emplace(str, obj);
+    }
+
+    return kwargs;
+}
+
+PyObject* trampolineWithData(PyObject* data, PyObject* pyargs, PyObject* pykwargs) {
+    if (!PyCObject_Check(data)) {
+        throw WrappyError("Trampoline data corrupted");
+    }
+
+    LambdaWithData fun = reinterpret_cast<LambdaWithData>(PyCObject_AsVoidPtr(data));
+    void* userdata = PyCObject_GetDesc(data);
+    auto args = to_vector(pyargs);
+    auto kwargs = to_map(pykwargs);
+
+    return fun(args, kwargs, userdata).release();
+}
+
+PyObject* trampolineNoData(PyObject* data, PyObject* pyargs, PyObject* pykwargs)
+{
+    if (!PyCObject_Check(data)) {
+        throw WrappyError("Trampoline data corrupted");
+    }
+
+    Lambda fun = reinterpret_cast<Lambda>(PyCObject_AsVoidPtr(data));
+    auto args = to_vector(pyargs);
+    auto kwargs = to_map(pykwargs);
+
+    return fun(args, kwargs).release();
+}
+
+// The reinterpret_cast<>'s here are technically undefined behaviour, but it's
+// the only way that python's C API provides :(
+PyMethodDef trampolineNoDataMethod {"trampoline1", reinterpret_cast<PyCFunction>(trampolineNoData), METH_KEYWORDS, nullptr};
+PyMethodDef trampolineWithDataMethod {"trampoline2", reinterpret_cast<PyCFunction>(trampolineWithData), METH_KEYWORDS, nullptr};
+
+} // end namespace
+
+PythonObject construct(Lambda lambda)
+{
+    PyObject* pydata = PyCObject_FromVoidPtr(reinterpret_cast<void*>(lambda), nullptr);
+    return PythonObject(PythonObject::owning{}, PyCFunction_New(&trampolineNoDataMethod, pydata));
+}
+
+PythonObject construct(LambdaWithData lambda, void* userdata)
+{
+    PyObject* pydata;
+    if (!userdata) {
+        pydata = PyCObject_FromVoidPtr(reinterpret_cast<void*>(lambda), nullptr);
+    } else { // python returns an error if FromVoidPtrAndDesc is called with desc being null
+        pydata = PyCObject_FromVoidPtrAndDesc(reinterpret_cast<void*>(lambda), userdata, nullptr);
+    }
+    return PythonObject(PythonObject::owning{}, PyCFunction_New(&trampolineWithDataMethod, pydata));
+}
+
+
+typedef PythonObject (*Lambda)(const std::vector<PythonObject>& args, const std::map<const char*, PythonObject>& kwargs);
+typedef PythonObject (*LambdaWithData)(const std::vector<PythonObject>& args, const std::map<const char*, PythonObject>& kwargs, void* userdata);
 
 } // end namespace wrappy

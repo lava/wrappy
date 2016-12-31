@@ -1,5 +1,6 @@
 #pragma once
 
+#include <map>
 #include <vector>
 #include <string>
 #include <stdexcept>
@@ -15,8 +16,7 @@ typedef _object PyObject;
  * making any increases and decreases inherently racy.
  *
  * If you want to use this in a multi-threaded environment, please make sure
- * to protect all accesses to objects that might refer to the same python 
- * object (directly or indirectly) by mutexes.
+ * to protect all concurrent calls that are not read-only by mutexes.
  */
 
 namespace wrappy {
@@ -42,16 +42,21 @@ public:
     PyObject* get() const;
     PythonObject attr(const std::string& x) const; // returns self.x
 
+    // Give up ownership of the underlying object
+    PyObject* release();
+
     // Constructors
     struct owning {};
     struct borrowed {};
-    PythonObject();
+    PythonObject(); // Note that this does not default to "None"
     PythonObject(owning, PyObject*);
     PythonObject(borrowed, PyObject*);
 
     // Syntactic sugar
     operator bool() const;
+
     PythonObject operator()() const; // forwards to self.__call__()
+
     template<typename... Args>
     PythonObject call(const std::string& f, Args... args);
 
@@ -93,7 +98,6 @@ extern PythonObject None;
 extern PythonObject True;
 extern PythonObject False;
 
-
 void addModuleSearchPath(const std::string& path);
 
 // There is one quirk of call() for the case of member methods:
@@ -125,6 +129,12 @@ PythonObject construct(const std::string&);
 PythonObject construct(PythonObject); // identity
 PythonObject construct(const std::vector<PythonObject>&); // python list
 
+// TODO there is no good way to actually call these constructed functions
+typedef PythonObject (*Lambda)(const std::vector<PythonObject>& args, const std::map<const char*, PythonObject>& kwargs);
+typedef PythonObject (*LambdaWithData)(const std::vector<PythonObject>& args, const std::map<const char*, PythonObject>& kwargs, void* userdata);
+PythonObject construct(Lambda);
+PythonObject construct(LambdaWithData, void*);
+
 PythonObject callWithArgs(
     const std::string& function,
     const std::vector<PythonObject>& args
@@ -147,6 +157,7 @@ PythonObject load(const std::string& name);
 
 // Will call x.__enter__() in constructor and x.__exit__() in destructor
 class ContextManager {
+public:
 	ContextManager(PythonObject x);
 	~ContextManager();
 };
