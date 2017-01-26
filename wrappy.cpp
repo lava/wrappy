@@ -92,8 +92,8 @@ PythonObject loadObject(PythonObject module, const std::string& name)
     size_t suffixDot = 0;
     while(suffixDot != std::string::npos) {
         size_t next_dot = name.find('.', suffixDot+1);
-        auto attr = name.substr(suffixDot+1, next_dot-(suffixDot+1)).c_str();
-        object = PythonObject(PythonObject::owning {}, PyObject_GetAttrString(object.get(), attr));
+        auto attr = name.substr(suffixDot+1, next_dot - (suffixDot+1));
+        object = PythonObject(PythonObject::owning {}, PyObject_GetAttrString(object.get(), attr.c_str()));
         suffixDot = next_dot;
     }
 
