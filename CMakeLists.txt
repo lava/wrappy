@@ -9,7 +9,11 @@ if (NOT PYTHON_VERSION VERSION_LESS 3.0)
   error("Requires python 2.x")
 endif()
 
-find_package(Boost COMPONENTS unit_test_framework)
+option( WRAPPY_BUILD_DEMOS "Build the wrappy tests" ON)
+
+if (WRAPPY_BUILD_DEMOS)
+  find_package(Boost COMPONENTS unit_test_framework)
+endif()
 
 # wrappy library target
 add_library(wrappy SHARED wrappy.cpp)
@@ -38,7 +42,7 @@ target_link_libraries(example_turtle wrappy)
 target_link_libraries(example_plot wrappy)
 
 # Tests
-if(Boost_UNIT_TEST_FRAMEWORK_FOUND)
+if(WRAPPY_BUILD_DEMOS AND Boost_UNIT_TEST_FRAMEWORK_FOUND)
   enable_testing()
   add_executable(test_stdlib tests/stdlib.cpp)
   add_executable(test_sugar tests/sugar.cpp)
